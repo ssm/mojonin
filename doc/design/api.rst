@@ -16,8 +16,7 @@ Parameters
 ----------
 
 The query parameter is the filter used to find the data to display.
-
-Parameter list
+The list of parameters pondered so far is:
 
 * host, a comma separated list of host names.  This value is combined
   with group and service with AND to make a filter.
@@ -31,8 +30,7 @@ Parameter list
 * fqn: a comma separated list of fully qualified names on the format
   group:host;service
 
-* time: a timestamp to center the data around.  Format is unix epoch
-  or ISO 8601 format.
+* time: a timestamp to center the data around.
 
 * time_from: a timestamp for the start of the graph.
 
@@ -42,9 +40,24 @@ Parameter list
   "forthnight", "month", "year". Combines with _one_ of time,
   time_from or time_to.
 
-TODO: Consider if adding host_id, group_id, service_id makes sense.
+TODO: Does adding host_id, group_id, service_id makes sense.  It
+probably does, if you want to refer to a single host, and not search
+for a match.
 
-TODO: Does all parameters make sense for all api endpoints?
+TODO: Does all parameters make sense for all api endpoints?  the
+"time" parameters are obvious for graphing, but for selecting hosts,
+do we show all hosts which checked in during that time?
+
+
+Time formats
+~~~~~~~~~~~~
+
+Time is parsed with http://mojolicio.us/perldoc/Mojo/Date#parse, which
+handles many formats.
+
+Recommended time format in code, documentation and examples is defined
+by RFC 3339.  Example: "1994-11-06T08:49:37Z".
+
 
 Status
 ======
