@@ -17,7 +17,7 @@ sub startup {
 sub _routes {
     my $app = shift;
 
-    $app->routes->get('/') - to('dashboard#welcome');
+    $app->routes->get('/')->to('dashboard#welcome');
 
 }
 1;
