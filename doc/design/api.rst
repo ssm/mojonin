@@ -2,6 +2,50 @@
  API documentation
 ===================
 
+document vs query parameters
+============================
+
+Document
+--------
+
+The document path determines the controller and the method in the
+controller.  What kind of result are we looking for.  This is the api
+endpoints.
+
+Parameters
+----------
+
+The query parameter is the filter used to find the data to display.
+
+Parameter list
+
+* host, a comma separated list of host names.  This value is combined
+  with group and service with AND to make a filter.
+
+* group: a comma separated list of groups. This value is combined with
+  host and service with AND to make a filter.
+
+* service: a comma separated list of services. This value is combined
+  with host and service with AND to make a filter.
+
+* fqn: a comma separated list of fully qualified names on the format
+  group:host;service
+
+* time: a timestamp to center the data around.  Format is unix epoch
+  or ISO 8601 format.
+
+* time_from: a timestamp for the start of the graph.
+
+* time_to: a timestamp for the end of the graph.
+
+* time_period: a period name, like "minute", "hour", "day", "week",
+  "forthnight", "month", "year". Combines with _one_ of time,
+  time_from or time_to.
+
+TODO: Consider if adding host_id, group_id, service_id makes sense.
+
+TODO: Does all parameters make sense for all api endpoints?
+
 Status
 ======
 
