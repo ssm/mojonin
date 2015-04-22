@@ -3,3 +3,7 @@
 <p>
     <%= $msg %>
 </p>
+<h2>status</h2>
+<p>
+    <%= dumper $c->stash->{minion_status} %>
+</p>
