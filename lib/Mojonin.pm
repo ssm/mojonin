@@ -3,16 +3,21 @@ use Mojo::Base 'Mojolicious';
 
 # This method will run once at server start
 sub startup {
-  my $self = shift;
+    my $app = shift;
 
-  # Minion plugin
-  $self->plugin('Minion', File => 'minion.db' );
+    $app->plugin( 'Config' => file => $ENV{MOJO_CONFIG}
+          || $app->home->rel_file('mojonin.conf') );
 
-  # Router
-  my $r = $self->routes;
+    # Minion plugin
+    $app->plugin( 'Minion', File => 'minion.db' );
 
-  # Normal route to controller
-  $r->get('/')->to('dashboard#welcome');
+    $app->_routes;
 }
 
+sub _routes {
+    my $app = shift;
+
+    $app->routes->get('/') - to('dashboard#welcome');
+
+}
 1;
