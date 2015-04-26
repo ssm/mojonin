@@ -5,13 +5,17 @@ use Mojo::Base 'Mojolicious';
 sub startup {
     my $app = shift;
 
-    $app->plugin( 'Config' => file => $ENV{MOJO_CONFIG}
-          || $app->home->rel_file('mojonin.conf') );
-
-    # Minion plugin
-    $app->plugin( 'Minion', File => 'minion.db' );
-
+    $app->_plugins;
     $app->_routes;
+}
+
+sub _plugins {
+    my $app = shift;
+
+    $app->plugin( 'Config' => file => $ENV{MOJO_CONFIG}
+                    || $app->home->rel_file('mojonin.conf') );
+
+    $app->plugin( 'Minion', File => $app->home->rel_file('minion.db') );
 }
 
 sub _routes {
