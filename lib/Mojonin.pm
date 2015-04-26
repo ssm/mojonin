@@ -19,5 +19,8 @@ sub _routes {
 
     $app->routes->get('/')->to('dashboard#welcome');
 
+    $app->routes->get('/group')->to('page#group');
+    $app->routes->get('/host')->to('page#host');
+    $app->routes->get('/service')->to('page#service');
 }
 1;
