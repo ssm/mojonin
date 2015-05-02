@@ -51,13 +51,13 @@ my $delay = Mojo::IOLoop->delay(
                 $stream->unsubscribe('read');
                 chomp $bytes;
                 $log->debug("<< $bytes");
-                if ( $bytes =~ /munin node at (.*)/ ) {
+                if ( $bytes =~ /^# munin node at (\S+)$/sm ) {
                     $delay->data( { hostname => $1 } );
-                    $end->($stream);
                 }
                 else {
                     die "protocol error (banner)\n";
                 }
+                $end->($stream);
             }
         );
     },
