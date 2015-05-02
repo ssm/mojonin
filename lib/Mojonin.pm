@@ -16,6 +16,9 @@ sub _plugins {
                     || $app->home->rel_file('mojonin.conf') );
 
     $app->plugin( 'Minion', File => $app->home->rel_file('minion.db') );
+    $app->plugin('Mojonin::Mojolicious::Plugin::Fetch');
+    $app->plugin('Mojonin::Mojolicious::Plugin::Update');
+
 }
 
 sub _routes {
@@ -26,5 +29,7 @@ sub _routes {
     $app->routes->get('/group')->to('page#group');
     $app->routes->get('/host')->to('page#host');
     $app->routes->get('/service')->to('page#service');
+
+    $app->routes->any([qw(GET POST)] => '/submit')->to(controller => 'NodeData', action => 'submit');
 }
 1;

@@ -15,3 +15,4 @@ sub service {
     my $self = shift;
     $self->render(json => [] );
 }
+1;
