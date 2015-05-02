@@ -65,8 +65,9 @@ my $delay = Mojo::IOLoop->delay(
     # Send "cap" command
     sub {
         my ( $delay, $stream ) = @_;
-        $stream->write(
-            "cap dirtyconfig multigraph\n" => $delay->begin(0)->($stream) );
+        my $end = $delay->begin(0);
+
+        $stream->write( "cap dirtyconfig multigraph\n" => $end->($stream) );
     },
 
     # Read capabilities
@@ -95,7 +96,7 @@ my $delay = Mojo::IOLoop->delay(
     # Send "list" command
     sub {
         my ( $delay, $stream ) = @_;
-        $stream->write("list\n" => $delay->begin(0)->($stream));
+        $stream->write( "list\n" => $delay->begin(0)->($stream) );
     },
 
     # Read list of plugins
@@ -119,7 +120,7 @@ my $delay = Mojo::IOLoop->delay(
     # Finish
     sub {
         my ( $delay, $stream ) = @_;
-        $stream->write("exit\n" => $delay->begin);
+        $stream->write( "exit\n" => $delay->begin(0) );
     },
 
     # Summary
@@ -128,11 +129,13 @@ my $delay = Mojo::IOLoop->delay(
         say "Blah, blah, blah";
         say "----------------";
         say "Hostname:     " . $delay->data('hostname');
-        say "Capabilities: " . join(', ', @{$delay->data('capabilities')});
-        say "Plugins:      " . join(', ', @{$delay->data('plugins')});
+        say "Capabilities: "
+            . join( ', ', @{ $delay->data('capabilities') } );
+        say "Plugins:      "
+            . join( ', ', sort @{ $delay->data('plugins') } );
 
     }
-  );
+);
 
 Mojo::IOLoop->client( { port => 4949 } => $delay->begin(0) );
 $delay->wait;
