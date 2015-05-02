@@ -1,6 +1,15 @@
 #!/usr/bin/perl
 use Mojo::Base 'Mojo::EventEmitter';
 use Mojo::IOLoop;
+use Mojo::Log;
+
+my $log = Mojo::Log->new();
+$log->format(
+    sub {
+        my ( $time, $level, @lines ) = @_;
+        return sprintf( "[%s] %s\n\n", $level, join( "\n", @lines ) );
+    }
+);
 
 my $delay = Mojo::IOLoop->delay(
 
@@ -17,14 +26,15 @@ my $delay = Mojo::IOLoop->delay(
         $stream->on(
             error => sub {
                 my ( $self, $message ) = @_;
-                say "[ERROR] $message";
+                $log->error($message);
             }
         );
 
         $stream->on(
             write => sub {
                 my ( $self, $message ) = @_;
-                say ">> $message";
+                chomp $message;
+                $log->debug(">> $message");
             }
         );
         $delay->pass($stream);
@@ -40,7 +50,7 @@ my $delay = Mojo::IOLoop->delay(
                 my ( $stream, $bytes ) = @_;
                 $stream->unsubscribe('read');
                 chomp $bytes;
-                say "<< $bytes";
+                $log->debug("<< $bytes");
                 if ( $bytes =~ /munin node at (.*)/ ) {
                     $delay->data( { hostname => $1 } );
                     $end->($stream);
@@ -69,7 +79,7 @@ my $delay = Mojo::IOLoop->delay(
                 my ( $stream, $bytes ) = @_;
                 $stream->unsubscribe('read');
                 chomp $bytes;
-                say "<< $bytes";
+                $log->debug("<< $bytes");
                 if ( $bytes =~ /cap (.*)/ ) {
                     my @capabilities = split( /\s+/, $1 );
                     $delay->data( { capabilities => \@capabilities } );
@@ -98,7 +108,7 @@ my $delay = Mojo::IOLoop->delay(
                 my ( $stream, $bytes ) = @_;
                 $stream->unsubscribe('read');
                 chomp $bytes;
-                say "<< $bytes";
+                $log->debug("<< $bytes");
                 my @plugins = split( /\s+/, $bytes );
                 $delay->data( { plugins => \@plugins } );
                 $end->($stream);
