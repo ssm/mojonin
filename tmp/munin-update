@@ -1,0 +1,4 @@
+#!/bin/sh
+
+package Munin::Update;
+use base 

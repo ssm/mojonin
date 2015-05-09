@@ -1,0 +1,151 @@
+#!/usr/bin/perl
+
+package Munin::Protocol;
+use Mojo::Base -base;
+use Params::Validate qw(:all);
+
+has 'state';
+has 'stream';
+
+has 'commands' => {
+    'cap' => {},
+    'list' => {},
+    'config' => {},
+    'fetch' => {},
+};
+
+sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new(@_);
+};
+
+sub send_command {
+    my $self = shift;
+    validate_pos(@_, { }, { });
+}
+
+package Munin::Fetch;
+
+use Mojo::Base -base;
+use Mojo::IOLoop;
+
+has 'state'   => 'disconnected';
+has 'address' => 'localhost';
+has 'port'    => 4949;
+has 'hostname';
+has 'plugins' => [];
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+
+    $self;
+}
+
+sub _connect {
+    my ($self, $cb) = @_;
+
+    return $cb;
+}
+
+sub _send_list {
+    my ($self) = @_;
+
+    my $delay = $self->_get_delay;
+    my $stream = $self->_get_stream;
+    my @steps;
+
+    push @steps, sub {
+        my ($delay, $stream) = @_;
+        my $end = $delay->begin(0);
+        $stream->write("list\n") => $end->($stream);
+    };
+
+
+    push @steps, sub {
+        my ($delay, $stream) = @_;
+        my $end = $delay->begin(0);
+        my $response;
+        $stream->on(
+            read => sub {
+                my ($stream, $bytes) = @_;
+                $response .= $bytes;
+                if ($response =~ /\n\.\n/) {
+                    $stream->unsubscribe('read');
+                    $end->($stream);
+                }
+            };
+        )
+    }
+}
+
+sub _read_response {
+    my ($self, $end_re) = @_;
+    my $delay = $self->_get_delay;
+    my $stream = $self->_get_stream;
+
+    $stream->on(
+        read => sub {}
+    );
+}
+
+sub _send_cap {
+    my $self = shift;
+    my $cb = shift;
+
+    my $delay = $self->_get_delay;
+    my $stream = $self->_get_stream;
+
+    my @steps;
+
+    push @steps, sub {
+        my ($delay, $stream) = @_;
+        my $end = $delay->begin(0);
+        $stream->write("cap dirtyconfig multigraph\n" => $end->($stream));
+    };
+
+    push @steps, sub {
+        my ($delay, $stream) = @_;
+        my $end = $delay->begin(0);
+        my $response = '';
+
+        $stream->on(
+            read => sub {
+                my ($stream, $bytes) = @_;
+                $response .= $bytes;
+                if ($response =~ /\n/) {
+                    $stream->unsubscribe('read');
+                    $end->($stream, $response);
+                }
+            }
+        );
+    };
+
+    push @steps, sub {
+        my ($delay, $stream, $response) = @_;
+        say $response;
+    };
+
+    Mojo::IOLoop->delay(@steps)->wait;
+}
+
+sub _fetch {
+    my ($self, $cb) = @_;
+
+    return $cb;
+}
+
+
+sub _make_stream {
+    my ($self, $sock, $loop) = @_;
+
+    weaken $self;
+
+    $self->{stream} = Mojo::IOLoop::Stream->new($sock);
+    $self->{stream}->reactor($loop->reactor);
+    $self->{stream}->start;
+}
+
+package main;
+
+my $c = Munin::Fetch->new();
