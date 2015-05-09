@@ -10,18 +10,13 @@ sub register {
     my ( $plugin, $app ) = @_;
 
     $app->_routes;
-    $app->_tasks;
-}
-
-sub _tasks {
-    my $app = shift;
 
     $app->minion->add_task(
         fetch => sub {
             my ( $job ) = @_;
-
-            my $data = qw{ some fake node data };
-            return $app->minion->enqueue(update => $data);
+            $app->log->debug('starting fetch');
+            $app->minion->enqueue(update => ['fake data']);
+            1;
         }
     );
 }
@@ -34,8 +29,7 @@ sub _routes {
         $c->minion->enqueue( fetch => { node => "foo.example.com", group => 'example.com' });
         $c->render( text => 'ok' );
     };
-
-
 }
 
+sub _
 1;

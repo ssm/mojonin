@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use Mojo::Base 'Mojo::EventEmitter';
+use Mojo::Base '-base';
 use Mojo::IOLoop;
 use Mojo::Log;
 
@@ -7,7 +7,7 @@ my $log = Mojo::Log->new();
 $log->format(
     sub {
         my ( $time, $level, @lines ) = @_;
-        return sprintf( "[%s] %s\n\n", $level, join( "\n", @lines ) );
+        return sprintf( "[%s] %s\n", $level, join( "\n", @lines ) );
     }
 );
 
@@ -84,11 +84,11 @@ my $delay = Mojo::IOLoop->delay(
                 if ( $bytes =~ /cap (.*)/ ) {
                     my @capabilities = split( /\s+/, $1 );
                     $delay->data( { capabilities => \@capabilities } );
-                    $end->($stream);
                 }
                 else {
-                    die "protocol error (cap)\n";
+                    $log->debug('no capabilities');
                 }
+                $end->($stream);
             }
         );
     },
@@ -117,6 +117,52 @@ my $delay = Mojo::IOLoop->delay(
         );
     },
 
+    # Get config
+    sub {
+        my ( $delay, $stream ) = @_;
+        my $end     = $delay->begin(0);
+
+        my @plugins = sort @{ $delay->data('plugins') };
+        $log->debug( 'Looping over ' . scalar @plugins . ' plugins' );
+
+        my @subs;
+
+        foreach my $plugin (@plugins) {
+
+            push @subs, sub {
+                my ($delay, $stream, $plugin) = @_;
+                $log->debug( ref $delay );
+                my $end = $delay->begin(0);
+                $stream->write("config ${plugin}\n") => $end->($stream);
+            };
+
+            push @subs, sub {
+                my ( $delay, $stream ) = @_;
+                my $end = $delay->begin(0);
+
+                my $response = '';
+
+                $stream->on(
+                    read => sub {
+                        my ( $stream, $bytes ) = @_;
+                        $response .= $bytes;
+                        if ($bytes =~ m/^\.$/smx) {
+                            $stream->unsubscribe('read');
+                            $log->debug("<< $response");
+                            $end->($stream);
+                        }
+                    }
+                );
+            }
+        }
+
+        my $p = Mojo::IOLoop->delay(@subs);
+        $p->begin($stream);
+        $p->wait;
+
+        $end->($stream);
+    },
+
     # Finish
     sub {
         my ( $delay, $stream ) = @_;
@@ -137,6 +183,7 @@ my $delay = Mojo::IOLoop->delay(
     }
 );
 
+Mojo::IOLoop->client( { port => 4949 } => $delay->begin(0) );
 Mojo::IOLoop->client( { port => 4949 } => $delay->begin(0) );
 $delay->wait;
 
